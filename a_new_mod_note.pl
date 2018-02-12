@@ -959,17 +959,17 @@ sub hash_to_text
 		my $origkey = $key;
 		$origkey =~ s/^<\d*>//;	# 移除先前為了排序加入的<數字>
 
-		if(%$hash{$key} =~ /【CB】/)
+		if($$hash{$key} =~ /【CB】/)
 		{
-			$cb_text = $origkey . %$hash{$key} . "，";
+			$cb_text = $origkey . $$hash{$key} . "，";
 		}
-		elsif(%$hash{$key} =~ /【大】/)
+		elsif($$hash{$key} =~ /【大】/)
 		{
-			$t_text = $origkey . %$hash{$key} . "，";
+			$t_text = $origkey . $$hash{$key} . "，";
 		}
 		else
 		{
-			$text = $text . $origkey . %$hash{$key} . "，";
+			$text = $text . $origkey . $$hash{$key} . "，";
 		}
 	}
 
