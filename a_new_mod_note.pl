@@ -11,7 +11,7 @@ use strict;
 use XML::DOM;
 my $parser = new XML::DOM::Parser;
 
-my $SourcePath = "c:/temp/xml-p5a-new/T/T01";			# 初始目錄, 最後不用加斜線 /
+my $SourcePath = "c:/temp/xml-p5a-new/T/T01";		# 初始目錄, 最後不用加斜線 /
 my $OutputPath = "c:/temp/xml-p5a-new/TT/T01";		# 目地初始目錄, 如果有需要的話. 最後不用加斜線 /
 my $log_file1 = "a_new_mod_note_log.txt";			# log 檔 , 記錄轉換的校勘
 my $log_file2 = "a_new_mod_note_err_log.txt";		# log 檔 , 記錄有問題的校勘
@@ -20,7 +20,7 @@ my $log_file4 = "a_new_mod_note_mix_log.txt";		# log 檔 , 記錄混合型校勘
 
 my $MakeOutputPath = 1;		# 1 : 產生對應的輸出目錄
 my $IsIncludeSubDir = 1;	# 1 : 包含子目錄 0: 不含子目錄
-my $FilePattern = "*.xml";	# 要找的檔案類型
+my $FilePattern = "T01n0000.xml";	# 要找的檔案類型
 
 my $lb_num = "";
 my $cnum = "[一二三四五六七八九十廿百千]";
@@ -400,7 +400,7 @@ sub new_mod_note
 
 	# XXX~xxx 要先處理成XXX【大】，~xxx
 	
-	if(($_ !~ /，/) && ($_ !~ /【/) && ($_ =~ /^(.*?)(～.*)$/))
+	if(($_ !~ /，/) && ($_ !~ /【/) && ($_ =~ /^(.+?)(～.*)$/))
 	{
 		return "$1【大】，$2";
 	}
@@ -594,7 +594,8 @@ sub new_mod_note
 			}
 		}
 		# 類型3 （Ａ）＋Ｂ【Ｘ】=>Ｂ【大】，ＡＢ【Ｘ】
-		elsif(/^（(.+?)）＋(.+?)(【.*】(?:(?:＊)|(?:下同))?)$/)
+		# Ｂ 可以為空的
+		elsif(/^（(.+?)）＋(.*?)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
@@ -612,7 +613,14 @@ sub new_mod_note
 			if($real_item_num == 1)
 			{
 				$taisho_word = $s2;
-				$hash{$s2} = "【大】$star";
+				if($s2 eq "")
+				{
+					$hash{"〔－〕"} = "【大】$star";
+				}
+				else
+				{
+					$hash{$s2} = "【大】$star";
+				}
 				$hash{"<$j>$s1$s2"} = $s3;
 				$notes[$i] = "";
 				$pure_note = check_pure_note($taisho_word);
@@ -629,8 +637,9 @@ sub new_mod_note
 				}
 			}
 		}
-		# 類型3-1 （Ａ）＋Ｂ【Ｘ】=>Ｂ【大】，ＡＢ【Ｘ】
-		elsif(/^（(.+?)）(${cnum}+?)字＋(.+?)(【.*】(?:(?:＊)|(?:下同))?)$/)
+		# 類型3-1 （Ａ）xx字＋Ｂ【Ｘ】=>Ｂ【大】，ＡＢ【Ｘ】
+		# Ｂ 可以為空的
+		elsif(/^（(.+?)）(${cnum}+?)字＋(.*?)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
@@ -653,7 +662,14 @@ sub new_mod_note
 				if($real_item_num == 1)
 				{
 					$taisho_word = $s3;
-					$hash{$s3} = "【大】$star";
+					if($s3 eq "")
+					{
+						$hash{"〔－〕"} = "【大】$star";
+					}
+					else
+					{
+						$hash{$s3} = "【大】$star";
+					}
 					$hash{"<$j>$s1$s3"} = $s4;
 					$notes[$i] = "";
 					$pure_note = check_pure_note($taisho_word);
