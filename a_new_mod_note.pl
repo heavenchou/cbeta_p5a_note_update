@@ -457,12 +457,13 @@ sub new_mod_note
 		}
 
 		# 類型1 （Ａ）Ｘ字＝Ｂ【Ｘ】=>Ａ【大】，Ｂ【Ｘ】
-		if(/^（(.+?)）(${cnum}+?)字＝(.+?)(【.*】(?:(?:＊)|(?:下同))?)$/)
+		if(/^（(.+?)）(${cnum}+?)字＝(.+?)([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
 			my $s3 = $3;
-			my $s4 = $4;
+			my $kai = $4;	# 有 ヵィぃ 等文字
+			my $s4 = $5;
 			my $star = "";
 			if($s4 =~ /＊/)
 			{
@@ -480,7 +481,7 @@ sub new_mod_note
 				{
 					$taisho_word = $s1;
 					$hash{$s1} = "【大】$star";
-					$hash{"<$j>$s3"} = $s4;
+					$hash{"<$j>$s3"} = check_kai($s4,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 
 					$pure_note = check_pure_note($taisho_word);
@@ -490,7 +491,7 @@ sub new_mod_note
 					# 字數不合
 					$taisho_word = $s1;
 					$hash{"（$s1）${s2}字"} = "【大】$star";
-					$hash{"<$j>$s3"} = $s4;
+					$hash{"<$j>$s3"} = check_kai($s4,$kai);
 					$notes[$i] = "";
 
 					$pure_note = 0;
@@ -502,17 +503,18 @@ sub new_mod_note
 			{
 				if($taisho_word eq $s1)
 				{
-					$hash{"<$j>$s3"} = $s4;
+					$hash{"<$j>$s3"} = check_kai($s4,$kai);
 					$notes[$i] = "";
 				}
 			}
 		}
 		# 類型1 Ａ＝Ｂ【Ｘ】=>Ａ【大】，Ｂ【Ｘ】
-		elsif(/^(.+?)＝(.+?)(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^(.+?)＝(.+?)([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
-			my $s3 = $3;
+			my $kai = $3;	# 有 ヵィぃ 等文字
+			my $s3 = $4;
 			my $star = "";
 			if($s3 =~ /＊/)
 			{
@@ -528,7 +530,7 @@ sub new_mod_note
 			{
 				$taisho_word = $s1;
 				$hash{$s1} = "【大】$star";
-				$hash{"<$j>$s2"} = $s3;
+				$hash{"<$j>$s2"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 				$notes[$i] = "";
 
 				$pure_note = check_pure_note($taisho_word);
@@ -542,16 +544,17 @@ sub new_mod_note
 					my $this_word = $taisho_word;
 					$this_word =~ s/$s1/$s2/;
 					
-					$hash{"<$j>$this_word"} = $s3;
+					$hash{"<$j>$this_word"} = check_kai($s3,$kai);
 					$notes[$i] = "";
 				}
 			}
 		}
 		# 類型2 〔Ａ〕－【Ｘ】=>Ａ【大】，〔－〕【Ｘ】
-		elsif(/^〔(.+?)〕－(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^〔(.+?)〕－([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
-			my $s2 = $2;
+			my $kai = $2;	# 有 ヵィぃ 等文字
+			my $s2 = $3;
 			my $star = "";
 			if($s2 =~ /＊/)
 			{
@@ -567,7 +570,7 @@ sub new_mod_note
 			{
 				$taisho_word = $s1;
 				$hash{$s1} = "【大】$star";
-				$hash{"<$j>〔－〕"} = $s2;
+				$hash{"<$j>〔－〕"} = check_kai($s2,$kai);	# 檢查有沒有日文 ka i
 				$notes[$i] = "";
 				$pure_note = check_pure_note($taisho_word);
 			}
@@ -583,23 +586,24 @@ sub new_mod_note
 					{
 						$this_word = "〔－〕";
 					}
-					$hash{"<$j>$this_word"} = $s2;
+					$hash{"<$j>$this_word"} = check_kai($s2,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 				}
 				elsif($taisho_word eq $s1)	# 相等的話, 也可以不用 #pure_note
 				{
-					$hash{"<$j>〔－〕"} = $s2;
+					$hash{"<$j>〔－〕"} = check_kai($s2,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 				}
 			}
 		}
 		# 類型3 （Ａ）＋Ｂ【Ｘ】=>Ｂ【大】，ＡＢ【Ｘ】
 		# Ｂ 可以為空的
-		elsif(/^（(.+?)）＋(.*?)(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^（(.+?)）＋(.*?)([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
-			my $s3 = $3;
+			my $kai = $3;	# 有 ヵィぃ 等文字
+			my $s3 = $4;
 			my $star = "";
 			if($s3 =~ /＊/)
 			{
@@ -621,7 +625,7 @@ sub new_mod_note
 				{
 					$hash{$s2} = "【大】$star";
 				}
-				$hash{"<$j>$s1$s2"} = $s3;
+				$hash{"<$j>$s1$s2"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 				$notes[$i] = "";
 				$pure_note = check_pure_note($taisho_word);
 			}
@@ -632,19 +636,20 @@ sub new_mod_note
 					my $this_word = $taisho_word;
 					$this_word =~ s/$s2/$s1$s2/;
 					
-					$hash{"<$j>$this_word"} = $s3;
+					$hash{"<$j>$this_word"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 				}
 			}
 		}
 		# 類型3-1 （Ａ）xx字＋Ｂ【Ｘ】=>Ｂ【大】，ＡＢ【Ｘ】
 		# Ｂ 可以為空的
-		elsif(/^（(.+?)）(${cnum}+?)字＋(.*?)(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^（(.+?)）(${cnum}+?)字＋(.*?)([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
 			my $s3 = $3;
-			my $s4 = $4;
+			my $kai = $4;	# 有 ヵィぃ 等文字 ############
+			my $s4 = $5;
 			my $star = "";
 
 			# 那個 xx 字的數字與括號中數字符合，才能做下去
@@ -670,7 +675,7 @@ sub new_mod_note
 					{
 						$hash{$s3} = "【大】$star";
 					}
-					$hash{"<$j>$s1$s3"} = $s4;
+					$hash{"<$j>$s1$s3"} = check_kai($s4,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 					$pure_note = check_pure_note($taisho_word);
 				}
@@ -681,7 +686,7 @@ sub new_mod_note
 						my $this_word = $taisho_word;
 						$this_word =~ s/$s3/$s1$s3/;
 						
-						$hash{"<$j>$this_word"} = $s4;
+						$hash{"<$j>$this_word"} = check_kai($s4,$kai);	# 檢查有沒有日文 ka i
 						$notes[$i] = "";
 					}
 				}
@@ -689,11 +694,13 @@ sub new_mod_note
 		}		
 		# 類型4 Ａ＋（Ｂ）【Ｘ】=>Ａ【大】，ＡＢ【Ｘ】
 		# Ａ可以不存在
-		elsif(/^(.*?)＋（(.+?)）(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^(.*?)＋（(.+?)）((?:[細夾旁側]註)?)([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
-			my $s3 = $3;
+			my $il_note = $3;	# 有細註
+			my $kai = $4;	# 有 ヵィぃ 等文字
+			my $s3 = $5;
 			my $star = "";
 			if($s3 =~ /＊/)
 			{
@@ -715,8 +722,11 @@ sub new_mod_note
 				{
 					$hash{$s1} = "【大】$star";
 				}
-
-				$hash{"<$j>$s1$s2"} = $s3;
+				if($il_note)
+				{
+					$s2 = "($s2)";
+				}
+				$hash{"<$j>$s1$s2"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 				$notes[$i] = "";
 				$pure_note = check_pure_note($taisho_word);
 			}
@@ -724,19 +734,20 @@ sub new_mod_note
 			{
 				if($s1 == $taisho_word && $pure_note)
 				{
-					$hash{"<$j>$s1$s2"} = $s3;
+					$hash{"<$j>$s1$s2"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 				}
 			}
 		} 
 		# 類型4-1 Ａ＋（Ｂ）xx字【Ｘ】=>Ａ【大】，ＡＢ【Ｘ】
 		# Ａ可以不存在
-		elsif(/^(.*?)＋（(.+?)）(${cnum}+?)字(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^(.*?)＋（(.+?)）(${cnum}+?)字([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
 			my $s3 = $3;
-			my $s4 = $4;
+			my $kai = $4;	# 有 ヵィぃ 等文字
+			my $s4 = $5;
 
 			# 那個 xx 字的數字與括號中數字符合，才能做下去
 			if(skip_this_num($s2, $s3))
@@ -763,7 +774,7 @@ sub new_mod_note
 						$hash{$s1} = "【大】$star";
 					}
 
-					$hash{"<$j>$s1$s2"} = $s4;
+					$hash{"<$j>$s1$s2"} = check_kai($s4,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 					$pure_note = check_pure_note($taisho_word);
 				}
@@ -771,18 +782,19 @@ sub new_mod_note
 				{
 					if($s1 == $taisho_word && $pure_note)
 					{
-						$hash{"<$j>$s1$s2"} = $s4;
+						$hash{"<$j>$s1$s2"} = check_kai($s4,$kai);	# 檢查有沒有日文 ka i
 						$notes[$i] = "";
 					}
 				}
 			}
 		} 
 		# 類型5 〔Ａ…Ｂ〕七字－【Ｘ】=>（Ａ…Ｂ）七字【大】，〔－〕【Ｘ】
-		elsif(/^〔(.+?)〕((?:${cnum}+?字)|(?:夾註))－(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^〔(.+?)〕((?:${cnum}+?字)|(?:夾註))－([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
-			my $s3 = $3;
+			my $kai = $3;	# 有 ヵィぃ 等文字
+			my $s3 = $4;
 			my $star = "";
 			if($s3 =~ /＊/)
 			{
@@ -804,7 +816,7 @@ sub new_mod_note
 					{
 						#字數相符
 						$hash{"$s1"} = "【大】$star";
-						$hash{"<$j>〔－〕"} = $s3;
+						$hash{"<$j>〔－〕"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 						$notes[$i] = "";
 						
 						$pure_note = check_pure_note($taisho_word);
@@ -813,7 +825,7 @@ sub new_mod_note
 					{
 						# 字數不符
 						$hash{"（$s1）$s2"} = "【大】$star";
-						$hash{"<$j>〔－〕"} = $s3;
+						$hash{"<$j>〔－〕"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 						$notes[$i] = "";
 						$pure_note = 0;
 					}
@@ -823,7 +835,7 @@ sub new_mod_note
 					# 可能是夾註
 					
 					$hash{"（$s1）$s2"} = "【大】$star";
-					$hash{"<$j>〔－〕"} = $s3;
+					$hash{"<$j>〔－〕"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 					$pure_note = 0;	
 				}
@@ -832,30 +844,31 @@ sub new_mod_note
 			{
 				if($s1 == $taisho_word && $pure_note)
 				{
-					$hash{"<$j>〔－〕"} = $s3;
+					$hash{"<$j>〔－〕"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 				}
 				elsif($taisho_word =~ /$s1/ && $pure_note)
 				{
 					my $this_word = $taisho_word;
 					$this_word =~ s/$s1//;
-					$hash{"<$j>$this_word"} = $s3;
+					$hash{"<$j>$this_word"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 				}
 				elsif($s1 == $taisho_word && $s2 =~ /^(${cnum}+?)字$/)
 				{
 					# 這也可以取消 〔東晉…譯〕十三字－【聖】
-					$hash{"<$j>〔－〕"} = $s3;
+					$hash{"<$j>〔－〕"} = check_kai($s3,$kai);	# 檢查有沒有日文 ka i
 					$notes[$i] = "";
 				}
 			}			
 		}
 		# 類型6 ＡＢＣ∞ＤＥＦ【Ｘ】=>ＡＢＣ【大】∞ＤＥＦ【Ｘ】
-		elsif(/^(.+?)∞(.+?)(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^(.+?)∞(.+?)([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
 			my $s1 = $1;
 			my $s2 = $2;
-			my $s3 = $3;
+			my $kai = $3;	# 有 ヵィぃ 等文字
+			my $s3 = $4;
 			my $star = "";
 			if($s3 =~ /＊/)
 			{
@@ -866,7 +879,11 @@ sub new_mod_note
 				$star = "下同";
 			}
 
-			$notes[$i] = "$s1【大】$star∞$s2$s3";
+			# （（ｘｘｘ））　改成單括號　（ＸＸＸ）
+			$s1 =~ s/（(（.*?）)）/$1/g;
+			$s2 =~ s/（(（.*?）)）/$1/g;
+
+			$notes[$i] = "$s1【大】$star∞$s2" . check_kai($s3,$kai);	# 檢查有沒有日文 ka i;
 			if($real_item_num == 1)
 			{
 				$taisho_word = $s1;
@@ -874,20 +891,25 @@ sub new_mod_note
 			}
 		}
 		# 後續的文字 ＝ＡＢＣ【Ｘ】
-		elsif(/^＝(.+?)(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^＝(.+?)([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
+			my $s1 = $1;
+			my $kai = $2;	# 有 ヵィぃ 等文字
+			my $s2 = $3;
 			if($real_item_num > 1)
 			{
-				$hash{"<$j>$1"} = $2;
+				$hash{"<$j>$s1"} = check_kai($s2,$kai);	# 檢查有沒有日文 ka i
 				$notes[$i] = "";
 			} 
 		}
 		# 後續的文字 －【Ｘ】
-		elsif(/^－(【.*】(?:(?:＊)|(?:下同))?)$/)
+		elsif(/^－([ヵィぃ]*)(【.*】(?:(?:＊)|(?:下同))?)$/)
 		{
+			my $kai = $1;	# 有 ヵィぃ 等文字
+			my $s1 = $2;
 			if($real_item_num > 1)
 			{
-				$hash{"<$j>〔－〕"} = $1;
+				$hash{"<$j>〔－〕"} = check_kai($s1,$kai);	# 檢查有沒有日文 ka i
 				$notes[$i] = "";
 			} 
 		}
@@ -910,6 +932,17 @@ sub new_mod_note
 				$pure_note = check_pure_note($taisho_word);
 			}
 		}
+		# 純粹版本記錄的不處理
+		# 【原】麗本，（佛說）＋一【宋】【元】【明】
+		elsif($_ =~ /^(【.*)$/)
+		{
+			$real_item_num -= 1;	# 真正有版本的組數
+			my $s1 = $1;
+			
+			$notes[$i] = "$s1";
+			$pure_note = 1;
+		}
+		
 	}
 
 	# 把 hash 的資料整理出來
@@ -924,7 +957,7 @@ sub new_mod_note
 	{
 		if($notes[$i])
 		{
-			if($notes[$i] =~ /【/)
+			if($notes[$i] =~ /^.+【/ && $notes[$i] !~ /∞/)	# 如果版本是一開始的 【原】之類的則沒關係
 			{
 				if($find_special == 0)
 				{
@@ -1209,6 +1242,38 @@ sub check_pure_note
 		return 0;
 	}
 	return 1;
+}
+
+# 檢查有沒有日文 ka i
+# 如果傳入的是 【原】,ヵ 則傳回 【考偽-原】
+# 如果傳入的是 【原】,ィ 則傳回 【校異Ａ-原】
+# 如果傳入的是 【原】,ぃ 則傳回 【校異Ｂ-原】
+# 如果傳入的是 【原】,   則傳回 【原】
+sub check_kai
+{
+	my $ver = shift;
+	my $kai = shift;
+
+	return $ver if($kai eq "");		# 沒有 kai, 傳回原版
+
+	if($kai eq "ヵ")
+	{
+		$ver =~ s/^【/【考偽\-/;
+		return $ver;
+	}
+	if($kai eq "ィ")
+	{
+		$ver =~ s/^【/【校異Ａ\-/;
+		return $ver;
+	}
+	if($kai eq "ぃ")
+	{
+		$ver =~ s/^【/【校異Ｂ\-/;
+		return $ver;
+	}
+
+	return "<!--CBETA todo type: newmod-->$kai$ver";
+
 }
 
 =begin
